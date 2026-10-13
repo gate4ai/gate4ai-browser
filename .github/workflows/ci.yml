@@ -36,8 +36,8 @@ jobs:
         run: |
           umask 077
           printf '%s\n' "$PUBLISHER_KEY" > "$RUNNER_TEMP/publisher.key"
-          gate4ai connectors pack . --key "$RUNNER_TEMP/publisher.key" -o package.g4c | tee pack.json
+          gate4ai connectors pack . --key "$RUNNER_TEMP/publisher.key" | tee pack.json
           rm "$RUNNER_TEMP/publisher.key"
-      - run: gh release create "$GITHUB_REF_NAME" package.g4c pack.json --generate-notes
+      - run: gh release create "$GITHUB_REF_NAME" *.g4c pack.json --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
