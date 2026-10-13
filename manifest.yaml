@@ -1,0 +1,30 @@
+connector: browser
+description: Read pages in the user's dedicated Chrome profile
+version: "2"
+runtime: wasm
+capabilities:
+  browser:
+    domains: ["${setting:allowed_domains}"]
+limits: { memory_mb: 64, timeout_s: 120 }
+actions:
+  - name: read
+    class: read
+    untrusted: true
+    description: Open a page on an allowed domain and return its text
+    args:
+      - { name: url, type: string, required: true, format: url }
+    example: gate4ai browser read --url https://lk.mosenergosbyt.ru/
+  - name: screenshot
+    class: read
+    evidence: png
+    description: Screenshot of one element (CSS selector) as evidence
+    args:
+      - { name: url, type: string, required: true, format: url }
+      - { name: selector, type: string, required: true }
+  - name: extract
+    class: read
+    untrusted: true
+    description: Extract data from a page by instruction (uses the model configured by the user)
+    args:
+      - { name: url, type: string, required: true, format: url }
+      - { name: instruction, type: string, required: true }
