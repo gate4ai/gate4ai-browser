@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: go install github.com/gate4ai/gate4ai/cmd/gate4ai@main
+      - run: GOPROXY=direct go install github.com/gate4ai/gate4ai/cmd/gate4ai@main # прокси кэширует @main
       - name: pack
         env:
           PUBLISHER_KEY: ${{ secrets.GATE4AI_PUBLISHER_KEY }}
