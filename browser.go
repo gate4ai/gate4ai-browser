@@ -29,18 +29,18 @@ func (Browser) Execute(ctx context.Context, h *abi.Host, r abi.ExecRequest) (abi
 		if err != nil {
 			return abi.ExecResult{}, err
 		}
-		res := map[string]any{"url": p.URL, "title": p.Title, "text": p.Text}
+		res := map[string]any{"url": p.URL, "title": p.Title}
 		if p.Truncated {
 			res["truncated"] = true
 		}
-		return abi.ExecResult{Result: res, ResultRef: p.URL, Source: "web:" + p.URL}, nil
+		return abi.ExecResult{Structured: res, Content: []abi.Content{abi.Text(p.Text)}, ResultRef: p.URL, Source: "web:" + p.URL}, nil
 	case "screenshot":
 		sel, _ := r.Args["selector"].(string)
 		png, err := h.BrowserScreenshot(sel)
 		if err != nil {
 			return abi.ExecResult{}, err
 		}
-		return abi.ExecResult{Result: map[string]any{"url": page.URL, "selector": sel, "bytes": len(png), "note": "image stored as evidence in the journal"},
+		return abi.ExecResult{Structured: map[string]any{"url": page.URL, "selector": sel}, Content: []abi.Content{abi.Image("image/png", png)},
 			ResultRef: page.URL, Evidence: []abi.EvidenceItem{{Name: "element.png", MIME: "image/png", Data: png}}}, nil
 	case "extract":
 		ins, _ := r.Args["instruction"].(string)
@@ -48,12 +48,12 @@ func (Browser) Execute(ctx context.Context, h *abi.Host, r abi.ExecRequest) (abi
 		if err != nil {
 			return abi.ExecResult{}, err
 		}
-		return abi.ExecResult{Result: map[string]any{"url": page.URL, "data": data}, ResultRef: page.URL, Source: "web:" + page.URL}, nil
+		return abi.ExecResult{Structured: map[string]any{"url": page.URL, "data": data}, ResultRef: page.URL, Source: "web:" + page.URL}, nil
 	}
 	return abi.ExecResult{}, fmt.Errorf("unknown action %s", r.Action)
 }
 
-// Verify — для действий чтения проверка не требуется.
-func (Browser) Verify(context.Context, *abi.Host, abi.VerifyRequest) (abi.VerifyResult, error) {
-	return abi.VerifyResult{Status: abi.Unverified, Method: "none"}, nil
+// Verify — у действий чтения проверки нет (хост её не вызывает).
+func (Browser) Verify(_ context.Context, _ *abi.Host, r abi.VerifyRequest) (abi.VerifyResult, error) {
+	return abi.VerifyResult{}, abi.Errorf(abi.CodeBadRequest, "action %s has no verification", r.Action)
 }

@@ -52,16 +52,16 @@ func TestReadScreenshotExtract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p := res.Result.(map[string]any)
-	if p["title"] != "Личный кабинет" || !strings.Contains(p["text"].(string), "1 234,56") || res.Source != "web:https://lk.mosenergosbyt.ru/" {
+	p := res.Structured.(map[string]any)
+	if p["title"] != "Личный кабинет" || !strings.Contains(res.Content[0].Text, "1 234,56") || res.Source != "web:https://lk.mosenergosbyt.ru/" {
 		t.Fatalf("%+v", res)
 	}
 	res, err = h.Execute(c, "screenshot", map[string]any{"url": "https://lk.mosenergosbyt.ru/", "selector": "#debt"})
-	if err != nil || string(res.Evidence[0].Data) != "\x89PNG-fake" {
+	if err != nil || string(res.Evidence[0].Data) != "\x89PNG-fake" || res.Content[0].Type != abi.ContentImage || string(res.Content[0].Data) != "\x89PNG-fake" {
 		t.Fatal(res, err)
 	}
 	res, err = h.Execute(c, "extract", map[string]any{"url": "https://lk.mosenergosbyt.ru/", "instruction": "debt"})
-	if err != nil || res.Result.(map[string]any)["data"].(map[string]any)["debt"] != 1234.56 {
+	if err != nil || res.Structured.(map[string]any)["data"].(map[string]any)["debt"] != 1234.56 {
 		t.Fatal(res, err)
 	}
 }

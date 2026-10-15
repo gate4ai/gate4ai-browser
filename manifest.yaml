@@ -1,6 +1,6 @@
 connector: browser
 description: Read pages in the user's dedicated Chrome profile
-version: "3"
+version: "4"
 runtime: wasm
 capabilities:
   browser:
@@ -11,20 +11,42 @@ actions:
     class: read
     untrusted: true
     description: Open a page on an allowed domain and return its text
-    args:
-      - { name: url, type: string, required: true, format: url }
+    input_schema:
+      type: object
+      properties:
+        url: { type: string, format: url }
+      required: [url]
+    output_schema:
+      type: object
+      properties:
+        url: { type: string }
+        title: { type: string }
+        truncated: { type: boolean }
+      required: [url, title]
     example: gate4ai browser read --url https://lk.mosenergosbyt.ru/
   - name: screenshot
     class: read
     evidence: png
-    description: Screenshot of one element (CSS selector) as evidence
-    args:
-      - { name: url, type: string, required: true, format: url }
-      - { name: selector, type: string, required: true }
+    description: Screenshot of one element (CSS selector); the image is returned and stored as evidence
+    input_schema:
+      type: object
+      properties:
+        url: { type: string, format: url }
+        selector: { type: string, description: CSS selector }
+      required: [url, selector]
+    output_schema:
+      type: object
+      properties:
+        url: { type: string }
+        selector: { type: string }
+      required: [url, selector]
   - name: extract
     class: read
     untrusted: true
     description: Extract data from a page by instruction (uses the model configured by the user)
-    args:
-      - { name: url, type: string, required: true, format: url }
-      - { name: instruction, type: string, required: true }
+    input_schema:
+      type: object
+      properties:
+        url: { type: string, format: url }
+        instruction: { type: string }
+      required: [url, instruction]
