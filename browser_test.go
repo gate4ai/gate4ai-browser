@@ -33,6 +33,9 @@ func (b *fakeBrowser) Extract(_ context.Context, ins string) (any, error) {
 func (b *fakeBrowser) ScreenshotElement(context.Context, string) ([]byte, error) {
 	return []byte("\x89PNG-fake"), nil
 }
+func (b *fakeBrowser) Act(context.Context, abi.BrowserRequest) (abi.BrowserActResponse, error) {
+	return abi.BrowserActResponse{}, hostfuncs.ErrNotFound
+}
 func (b *fakeBrowser) Release() {}
 
 func setup(t *testing.T) *hosttest.Host {
