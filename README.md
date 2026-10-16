@@ -19,6 +19,7 @@ gate4ai connectors pack . -o browser.g4c && gate4ai connectors install browser.g
 ```sh
 go test ./...                                                    # нативно, на тестовом хосте sdk-go/hosttest
 GOOS=wasip1 GOARCH=wasm go build -buildmode=c-shared -o connector.wasm .
+gate4ai connectors install . --watch                             # поставить в свой daemon из исходников и пересобирать на каждое сохранение
 ```
 
 ## Лицензия
