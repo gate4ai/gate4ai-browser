@@ -5,8 +5,7 @@
 // хоста; домены — capabilities.browser.domains из настройки allowed_domains,
 // хост проверяет их до и после редиректов.
 //
-// Лицензия: AGPL-3.0-only с дополнительным разрешением для хоста gate4ai
-// (LICENSE-EXCEPTION).
+// Лицензия: AGPL-3.0-only.
 package main
 
 import (
