@@ -1,6 +1,6 @@
 connector: browser
 description: Read pages in the user's dedicated Chrome profile
-version: "4"
+version: "5"
 runtime: wasm
 capabilities:
   browser:
