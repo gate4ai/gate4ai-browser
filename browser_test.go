@@ -43,7 +43,7 @@ func setup(t *testing.T) *hosttest.Host {
 	if err != nil {
 		t.Fatal(err)
 	}
-	h := hosttest.New(m, map[string]any{"allowed_domains": []any{"*.gosuslugi.ru", "lk.mosenergosbyt.ru"}}, nil)
+	h := hosttest.New(m, map[string]any{"allowed_domains": []any{"*.example.com", "app.example.org"}}, nil)
 	h.Browser = &fakeBrowser{}
 	return h
 }
@@ -51,19 +51,19 @@ func setup(t *testing.T) *hosttest.Host {
 func TestReadScreenshotExtract(t *testing.T) {
 	h := setup(t)
 	c := Browser{}
-	res, err := h.Execute(c, "read", map[string]any{"url": "https://lk.mosenergosbyt.ru/"})
+	res, err := h.Execute(c, "read", map[string]any{"url": "https://app.example.org/"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	p := res.Structured.(map[string]any)
-	if p["title"] != "Личный кабинет" || !strings.Contains(res.Content[0].Text, "1 234,56") || res.Source != "web:https://lk.mosenergosbyt.ru/" {
+	if p["title"] != "Личный кабинет" || !strings.Contains(res.Content[0].Text, "1 234,56") || res.Source != "web:https://app.example.org/" {
 		t.Fatalf("%+v", res)
 	}
-	res, err = h.Execute(c, "screenshot", map[string]any{"url": "https://lk.mosenergosbyt.ru/", "selector": "#debt"})
+	res, err = h.Execute(c, "screenshot", map[string]any{"url": "https://app.example.org/", "selector": "#debt"})
 	if err != nil || string(res.Evidence[0].Data) != "\x89PNG-fake" || res.Content[0].Type != abi.ContentImage || string(res.Content[0].Data) != "\x89PNG-fake" {
 		t.Fatal(res, err)
 	}
-	res, err = h.Execute(c, "extract", map[string]any{"url": "https://lk.mosenergosbyt.ru/", "instruction": "debt"})
+	res, err = h.Execute(c, "extract", map[string]any{"url": "https://app.example.org/", "instruction": "debt"})
 	if err != nil || res.Structured.(map[string]any)["data"].(map[string]any)["debt"] != 1234.56 {
 		t.Fatal(res, err)
 	}
@@ -71,13 +71,13 @@ func TestReadScreenshotExtract(t *testing.T) {
 
 func TestDomainAllowlist(t *testing.T) {
 	h := setup(t)
-	for _, u := range []string{"https://evil.example/", "https://gosuslugi.ru.evil.example/", "https://lk.mosenergosbyt.ru/redirect"} {
+	for _, u := range []string{"https://evil.example/", "https://example.com.evil.example/", "https://app.example.org/redirect"} {
 		if _, err := h.Execute(Browser{}, "read", map[string]any{"url": u}); err == nil || !strings.Contains(err.Error(), abi.CodeCapabilityDenied) {
 			t.Errorf("%s: %v", u, err)
 		}
 	}
 	h.Settings = map[string]any{}
-	if _, err := h.Execute(Browser{}, "read", map[string]any{"url": "https://x.ru"}); err == nil {
+	if _, err := h.Execute(Browser{}, "read", map[string]any{"url": "https://x.example"}); err == nil {
 		t.Fatal("empty allowlist must deny")
 	}
 }

@@ -23,7 +23,7 @@ actions:
         title: { type: string }
         truncated: { type: boolean }
       required: [url, title]
-    example: gate4ai browser read --url https://lk.mosenergosbyt.ru/
+    example: gate4ai browser read --url https://app.example.org/
   - name: screenshot
     class: read
     evidence: png
