@@ -1,16 +1,18 @@
 connector: browser
-description: Read pages in the user's dedicated Chrome profile
-version: "5"
-runtime: wasm
+description: Pages in the user's dedicated Chrome profile; page actions for other connectors
+version: "6"
+runtime: native
+platforms: [linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64]
+contract: 1
+services: [open, observe, act, page_extract, page_screenshot]
 capabilities:
-  browser:
-    domains: ["${setting:allowed_domains}"]
-limits: { memory_mb: 64, timeout_s: 120 }
+  reveal: ["${setting:model_key}"]
+limits: { timeout_s: 120 }
 actions:
   - name: read
     class: read
     untrusted: true
-    description: Open a page on an allowed domain and return its text
+    description: Open a page on an allowed site and return its text
     input_schema:
       type: object
       properties:
@@ -50,3 +52,73 @@ actions:
         url: { type: string, format: url }
         instruction: { type: string }
       required: [url, instruction]
+  # Действия для других коннекторов (service_call): страница — одна на корневое
+  # действие агента, сайты — params.sites вызывающего ({mode, domains, blocked}).
+  - name: open
+    class: read
+    service_only: true
+    description: Open a page on a site allowed by the caller's params.sites
+    input_schema:
+      type: object
+      properties:
+        url: { type: string, format: url }
+      required: [url]
+    output_schema:
+      type: object
+      properties:
+        url: { type: string, description: address after redirects }
+        title: { type: string }
+      required: [url, title]
+  - name: observe
+    class: read
+    service_only: true
+    description: Address, title and text of the open page
+    input_schema:
+      type: object
+      properties:
+        max_chars: { type: integer, minimum: 0, description: "0 — the browser's limit" }
+    output_schema:
+      type: object
+      properties:
+        url: { type: string }
+        title: { type: string }
+        text: { type: string }
+        truncated: { type: boolean }
+      required: [url, title]
+  - name: act
+    class: write
+    service_only: true
+    description: Click, fill, press a key or wait for an element by CSS selector and its visible text
+    input_schema:
+      type: object
+      properties:
+        selector: { type: string, description: CSS selector }
+        method: { type: string, enum: [click, fill, press, wait] }
+        text: { type: string, description: "the first visible element whose text, label, placeholder or aria-label contains it" }
+        value: { type: string, maxLength: 4096, description: "fill: the value; press: Enter, Tab, Escape, Backspace, ArrowDown, ArrowUp" }
+        timeout_ms: { type: integer, minimum: 0, maximum: 60000, description: "how long to wait for the element (0 — 10 s)" }
+      required: [selector, method]
+    output_schema:
+      type: object
+      properties:
+        url: { type: string, description: address after the action }
+        text: { type: string, description: text of the element (up to 2000 characters) }
+      required: [url]
+  - name: page_extract
+    class: read
+    service_only: true
+    description: Extract data from the open page by instruction (uses the model configured by the user)
+    input_schema:
+      type: object
+      properties:
+        instruction: { type: string }
+      required: [instruction]
+  - name: page_screenshot
+    class: read
+    service_only: true
+    description: Screenshot of one element of the open page (PNG in content)
+    input_schema:
+      type: object
+      properties:
+        selector: { type: string, description: CSS selector }
+      required: [selector]

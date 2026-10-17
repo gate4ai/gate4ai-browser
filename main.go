@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Коннектор gate4.ai «Браузер» (чтение): тонкий модуль поверх функций хоста
-// browser_*. Сам браузер (выделенный профиль Chrome, CDP, Stagehand) — служба
-// хоста; домены — capabilities.browser.domains из настройки allowed_domains,
-// хост проверяет их до и после редиректов.
+// Коннектор gate4.ai «Браузер» — нативный пакет (runtime: native): браузерный
+// воркер (выделенный профиль Chrome, CDP, Stagehand) в отдельном процессе под
+// надзором gate4ai. Агенту — чтение, скриншот и извлечение на сайтах из
+// настроек (allowed_domains / blocked); другим коннекторам — действия с
+// открытой страницей через service_call (open, observe, act, page_extract,
+// page_screenshot) на сайтах из их params.sites. Ключ модели для extract хост
+// передаёт по capabilities.reveal.
 //
 // Лицензия: AGPL-3.0-only.
 package main
@@ -11,12 +14,10 @@ package main
 import (
 	_ "embed"
 
-	"github.com/gate4ai/sdk-go/connector"
+	"github.com/gate4ai/sdk-go/native"
 )
 
 //go:embed manifest.yaml
 var manifestYAML []byte
 
-func init() { connector.Register(manifestYAML, Browser{}) }
-
-func main() {}
+func main() { native.Serve(manifestYAML, New()) }

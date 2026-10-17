@@ -11,13 +11,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
       - run: go vet ./... && go test -race ./...
-      - run: GOOS=wasip1 GOARCH=wasm go vet ./...
-  # Тег v* — воспроизводимая сборка модуля, пакет .g4c с подписью издателя,
-  # релиз; затем pull request в gate4ai/registry с sha256 и digest из вывода pack.
+      - run: for p in darwin/arm64 windows/amd64; do GOOS=${p%/*} GOARCH=${p#*/} CGO_ENABLED=0 go build -o /dev/null . || exit 1; done
+      # Действия для других коннекторов: несовместимое изменение — только с новым contract.
+      - run: GOPROXY=direct go install github.com/gate4ai/gate4ai/cmd/gate4ai@main # прокси кэширует @main
+      - name: contract
+        run: |
+          prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          if [ -n "$prev" ] && git show "$prev:manifest.yaml" > prev.yaml 2>/dev/null && grep -q '^services:' prev.yaml; then
+            gate4ai contract diff prev.yaml manifest.yaml
+          fi
+  # Тег v* — воспроизводимая сборка под каждую платформу из manifest.platforms,
+  # пакеты .g4c с подписью издателя и список .platforms.json, релиз; затем pull
+  # request в gate4ai/registry с sha256 и digest из вывода pack.
   e2e:
     uses: gate4ai/e2e/.github/workflows/e2e.yml@main
     with:
@@ -43,6 +54,6 @@ jobs:
           printf '%s\n' "$PUBLISHER_KEY" > "$RUNNER_TEMP/publisher.key"
           gate4ai connectors pack . --key "$RUNNER_TEMP/publisher.key" | tee pack.json
           rm "$RUNNER_TEMP/publisher.key"
-      - run: gh release create "$GITHUB_REF_NAME" *.g4c pack.json --generate-notes
+      - run: gh release create "$GITHUB_REF_NAME" *.g4c *.platforms.json pack.json --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
