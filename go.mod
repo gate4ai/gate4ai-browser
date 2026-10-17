@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	github.com/browserbase/stagehand/packages/sdk-go/v4 v4.2.1
 	github.com/coder/websocket v1.8.15
-	github.com/gate4ai/sdk-go v0.6.0
+	github.com/gate4ai/sdk-go v0.6.1
 )
 
 require (
